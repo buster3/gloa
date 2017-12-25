@@ -11,15 +11,17 @@ fn main() {
     let filename = &args[1];
 
     let mut f = File::open(filename).expect("file not found");
-    let mut poem_in = String::new();
-    f.read_to_string(&mut poem_in)
+    let mut book_in = String::new();
+    f.read_to_string(&mut book_in)
         .expect("something went wrong reading the file");
 
-    println!("Words in poem {}", shorter::poem_shorter::number_words(&poem_in));
-    println!("Longest word in poem {}", shorter::poem_shorter::longest_word(&poem_in));
+    println!("Words in book {}", shorter::book_shorter::number_words(&book_in));
+    println!("Longest word in poem {}", shorter::book_shorter::longest_word(&book_in));
 
-    for x in shorter::poem_shorter::hist_word(&poem_in) {
-        for _ in 1..x {
+    let hist = shorter::book_shorter::hist_word(&book_in);
+    for (i, x) in hist.iter().enumerate() {
+        print!("{}, {}: ", i+1, x);
+        for _ in 0..x/200 {
             print!("x");
         }
         println!("");

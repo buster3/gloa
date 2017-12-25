@@ -1,17 +1,17 @@
-pub mod poem_shorter {
+pub mod book_shorter {
 
-    pub fn number_words(poem_in: &str) -> usize {
-        poem_in.split_whitespace().count()
+    pub fn number_words(book_in: &str) -> usize {
+        book_in.split_whitespace().count()
     }
 
-    pub fn longest_word(poem_in: &str) -> usize {
-        poem_in.split_whitespace().map(|x| x.len()).max().unwrap_or(0)
+    pub fn longest_word(book_in: &str) -> usize {
+        book_in.split_whitespace().map(|x| x.chars().count()).max().unwrap_or(0)
     }
 
-    pub fn hist_word(poem_in: &str) -> Vec<u32> {
+    pub fn hist_word(book_in: &str) -> Vec<u32> {
         let mut vec = Vec::<u32>::new();
-        for x in poem_in.split_whitespace() {
-            let cnt = x.len();
+        for x in book_in.split_whitespace() {
+            let cnt = x.chars().count();
             if vec.len() < cnt {
                 vec.resize(cnt, 0)
             }
