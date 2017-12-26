@@ -18,12 +18,22 @@ fn main() {
     println!("Words in book {}", shorter::book_shorter::number_words(&book_in));
     println!("Longest word in poem {}", shorter::book_shorter::longest_word(&book_in));
 
-    let hist = shorter::book_shorter::hist_word(&book_in);
+    /*
+    let hist = shorter::book_shorter::compress(&book_in);
     for (i, x) in hist.iter().enumerate() {
         print!("{}, {}: ", i+1, x);
         for _ in 0..x/200 {
             print!("x");
         }
         println!("");
+    }
+    */
+
+    let result = shorter::book_shorter::compress(&book_in);
+    println!("Lines in result: {}", result.len());
+    for (i, x) in result.iter().enumerate() {
+        if *x != shorter::book_shorter::TARGET as u32 {
+            print!("x");
+        }
     }
 }
