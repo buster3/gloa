@@ -40,6 +40,36 @@ pub mod book_shorter {
         i as usize - 2
     }
 
+    pub const MAX_COMBINATIONS: usize = 3;
+
+    fn try_combination(combination : [usize; MAX_COMBINATIONS], sorted: &mut Vec<u32>, res: &mut isize) -> bool {
+        let mut unique : Vec<usize> = combination.to_vec();
+        unique.dedup();
+
+        println!("unique {:?}", unique);
+
+        let combination_possible = unique.iter().all(|&x| {
+            let cnt = combination.iter().fold(0, |total, &s| { 
+            if s == x {
+                total + 1
+            } else {
+                total
+            }});
+            sorted[x] >= cnt as u32
+        });
+
+        if combination_possible {
+            // found a pair to fill the line
+            *res += combination.iter().map(|&x| word_len(x)).sum();
+            for &x in combination.iter() {
+                sorted[x] -= 1;
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn compress(book_in: &str) -> Vec<isize> {
         let mut sorted = hist_word(book_in);
         let mut res: Vec<isize> = Vec::new();
@@ -49,31 +79,40 @@ pub mod book_shorter {
         for i in (0..sorted.len()).rev() {
             while sorted[i] > 0 {
 
-                let mut free = TARGET - (res[out_idx] as isize);
-                let border = word_len(i);
+                let mut free = TARGET - res[out_idx];
+                let border = word_len(i) * MAX_COMBINATIONS as isize;
 
-                if (free - word_len(i)) > border {
+                // TODO greater equal?
+                if free > border {
                     // fill up
                     res[out_idx] = res[out_idx] + word_len(i);
                     sorted[i] = sorted[i] - 1;
-                    free = free - word_len(i);
                 } else {
-                    // fill with two words
-                    let mut current = get_idx(free / 2);
-                    while current <= i && free - word_len(current) >= 2 {
-                        let second_idx = get_idx(free - word_len(current));
-                        if sorted[current] > 0 && sorted[second_idx] > 0 {
-                            // found a pair to fill the line
-                            res[out_idx] = res[out_idx] + word_len(current) + word_len(second_idx);
-                            sorted[current] = sorted[current] - 1;
-                            sorted[second_idx] = sorted[second_idx] - 1;
+                    // fill up with three more words,
+                    // using less words is not possible
+                    let first_idx = i;
+                    let to_be_filled = free - word_len(first_idx);
+                    // TODO ceil idx
+                    let mut second_idx = get_idx(to_be_filled / 2);
+                    while second_idx <= i && to_be_filled - word_len(second_idx) >= 2 {
+                        let thrid_idx = get_idx(to_be_filled - word_len(second_idx));
+                        let combination = [first_idx, second_idx, thrid_idx];
+                        println!("try i {}, free {}, combination {:?}", i, free, combination);
+                        if try_combination(combination, &mut sorted, &mut res[out_idx]) {
                             break;
                         }
-                        current = current + 1;
+                        second_idx = second_idx + 1;
                     }
                     if res[out_idx] != TARGET {
-                        // too bad...
-                        println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
+                        // soo bad... :(
+                        if free >= word_len(i) {
+                            // fill up
+                            println!("fill up");
+                            res[out_idx] = res[out_idx] + word_len(i);
+                            sorted[i] = sorted[i] - 1;
+                        } else {
+                            println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
+                        }
                     }
 
                     // next line
@@ -81,12 +120,8 @@ pub mod book_shorter {
                     out_idx = out_idx + 1;
 
                 }
-
-
-
             }
         }
-
         res
     }
 

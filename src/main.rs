@@ -31,7 +31,7 @@ fn main() {
 
     let result = shorter::book_shorter::compress(&book_in);
     println!("Lines in result: {}", result.len());
-    for (i, x) in result.iter().enumerate() {
+    for x in result.iter() {
         if *x != shorter::book_shorter::TARGET {
             print!("x");
         }
