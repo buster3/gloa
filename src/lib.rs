@@ -1,4 +1,5 @@
 pub mod book_shorter {
+    use std::cmp;
 
     pub fn number_words(book_in: &str) -> usize {
         book_in.split_whitespace().count()
@@ -77,7 +78,23 @@ pub mod book_shorter {
             while sorted[i] > 0 {
 
                 let mut free = TARGET - res[out_idx];
-                let border = word_len(i) * MAX_COMBINATIONS as isize;
+
+                let mut dummy = MAX_COMBINATIONS as isize;
+                let mut border = 0;
+                let mut i_t = i;
+                while dummy > 0 {
+                    let available = cmp::min(dummy, sorted[i_t] as isize);
+                    border += word_len(i_t) * available;
+                    dummy -= available;
+                    if i_t > 0 {
+                        i_t -= 1;
+                    } else {
+                        break;
+                    }
+
+                }
+
+                //let border = word_len(i) * MAX_COMBINATIONS as isize;
 
                 // TODO greater equal?
                 if free > border {
