@@ -5,73 +5,85 @@ pub mod book_shorter {
     }
 
     pub fn longest_word(book_in: &str) -> usize {
-        book_in.split_whitespace().map(|x| x.chars().count()).max().unwrap_or(0)
+        book_in
+            .split_whitespace()
+            .map(|x| x.chars().count())
+            .max()
+            .unwrap_or(0)
     }
 
     pub fn hist_word(book_in: &str) -> Vec<u32> {
-        let mut vec : Vec<u32> = Vec::new();
+        let mut vec: Vec<u32> = Vec::new();
         for x in book_in.split_whitespace() {
             let cnt = x.chars().count();
             if vec.len() < cnt {
                 vec.resize(cnt, 0)
             }
-            vec[cnt-1] = vec[cnt-1] + 1;
+            vec[cnt - 1] = vec[cnt - 1] + 1;
         }
         vec
     }
 
-    pub const TARGET : usize = 81;
+    pub const TARGET: isize = 81;
 
     struct Word<'a> {
         word: &'a str,
         chars: u8,
     }
 
-    pub fn compress(book_in: &str) -> Vec<u32> {
-        let mut sorted  = hist_word(book_in);
-        let mut res : Vec<u32> = Vec::new();
+    fn word_len(i : usize) -> isize {
+        i as isize + 2
+    }
+
+    fn get_idx(i : isize) -> usize {
+        assert!(i >= 2);
+        i as usize - 2
+    }
+
+    pub fn compress(book_in: &str) -> Vec<isize> {
+        let mut sorted = hist_word(book_in);
+        let mut res: Vec<isize> = Vec::new();
         res.push(0);
-        let mut idx = 0 as usize;
+        let mut out_idx = 0 as usize;
 
         for i in (0..sorted.len()).rev() {
-            let word_len = i + 1 + 1;
-
             while sorted[i] > 0 {
-                let mut free = TARGET - (res[idx] as usize);
-                let mut wanted = free;
-            
-                // fill up with the big ones
-                if free == word_len || free >= (word_len + 2) {
-                    res[idx] = res[idx] + word_len as u32;
-                    free = free - word_len;
-                    wanted = free;
+
+                let mut free = TARGET - (res[out_idx] as isize);
+                let border = word_len(i);
+
+                if (free - word_len(i)) > border {
+                    // fill up
+                    res[out_idx] = res[out_idx] + word_len(i);
                     sorted[i] = sorted[i] - 1;
+                    free = free - word_len(i);
                 } else {
-                    // use what fits
-                    while wanted > 1 {
-                        if sorted[wanted - 2] > 0 {
-                            res[idx] = res[idx] + wanted as u32;
-                            sorted[wanted-2] = sorted[wanted-2] - 1;
-                            free = free - wanted;
-                            wanted = free;
-                        } else {
-                            if wanted == free {
-                                wanted = wanted - 2;
-                            } else {
-                                wanted = wanted - 1;
-                            }
-                            
+                    // fill with two words
+                    let mut current = get_idx(free / 2);
+                    while current <= i && free - word_len(current) >= 2 {
+                        let second_idx = get_idx(free - word_len(current));
+                        if sorted[current] > 0 && sorted[second_idx] > 0 {
+                            // found a pair to fill the line
+                            res[out_idx] = res[out_idx] + word_len(current) + word_len(second_idx);
+                            sorted[current] = sorted[current] - 1;
+                            sorted[second_idx] = sorted[second_idx] - 1;
+                            break;
                         }
+                        current = current + 1;
                     }
-                }
-                if wanted <= 1 && free != 0 {
-                    println!("debug");
+                    if res[out_idx] != TARGET {
+                        // too bad...
+                        println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
+                    }
+
+                    // next line
+                    res.push(0);
+                    out_idx = out_idx + 1;
+
                 }
 
-                if wanted <= 1 {
-                    res.push(0);
-                    idx = idx + 1;
-                }
+
+
             }
         }
 

@@ -32,7 +32,7 @@ fn main() {
     let result = shorter::book_shorter::compress(&book_in);
     println!("Lines in result: {}", result.len());
     for (i, x) in result.iter().enumerate() {
-        if *x != shorter::book_shorter::TARGET as u32 {
+        if *x != shorter::book_shorter::TARGET {
             print!("x");
         }
     }
