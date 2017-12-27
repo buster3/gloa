@@ -84,7 +84,7 @@ pub mod book_shorter {
         for i in (0..sorted.len()).rev() {
             while sorted[i] > 0 {
 
-                let mut free = TARGET - res[out_idx];
+                let free = TARGET - res[out_idx];
 
                 let mut dummy = MAX_COMBINATIONS as isize;
                 let mut border = 0;
@@ -98,7 +98,6 @@ pub mod book_shorter {
                     } else {
                         break;
                     }
-
                 }
 
                 //let border = word_len(i) * MAX_COMBINATIONS as isize;
@@ -112,16 +111,22 @@ pub mod book_shorter {
                         let first_idx = i - k;
                         let to_be_filled = free - word_len(first_idx);
                         // ceil idx
-                        let mut second_idx = get_idx((to_be_filled + 1) / 2);
-                        while second_idx <= i && to_be_filled - word_len(second_idx) >= 2 {
-                            let thrid_idx = get_idx(to_be_filled - word_len(second_idx));
-                            let combination = vec![first_idx, second_idx, thrid_idx];
-                            if try_combination(&combination, &mut sorted, &mut res[out_idx]) {
-                                //println!("try i {}, free {}, combination {:?}, sorted {:?}", i, free, combination, sorted);
+                        let mut second_idx = first_idx;
+                        loop {
+                            let word_len_third = to_be_filled - word_len(second_idx);
+                            if word_len_third >= 2 {
+                                let thrid_idx = get_idx(word_len_third);
+                                let combination = vec![first_idx, second_idx, thrid_idx];
+                                if try_combination(&combination, &mut sorted, &mut res[out_idx]) {
+                                    //println!("try i {}, free {}, combination {:?}, sorted {:?}", i, free, combination, sorted);
+                                    break;
+                                }
+                            }
+                            if second_idx < 1 || word_len(second_idx - 1) <= (word_len_third+1) {
                                 break;
                             }
-                            second_idx = second_idx + 1;
-                        }
+                            second_idx = second_idx - 1;
+                        };
                         if res[out_idx] == TARGET {
                             break;
                         }
@@ -129,15 +134,6 @@ pub mod book_shorter {
                     if res[out_idx] != TARGET {
                         // soo bad... :(
                         println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
-                        if free >= word_len(i) {
-                            // fill up
-                            println!("fill up");
-                            res[out_idx] += word_len(i);
-                            sorted[i] -= 1;
-                            //continue;
-                        } else {
-                            println!("fill up not possible");
-                        }
                     }
 
                     // next line
