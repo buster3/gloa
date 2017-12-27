@@ -18,6 +18,9 @@ fn main() {
     println!("Words in book {}", shorter::book_shorter::number_words(&book_in));
     println!("Longest word in poem {}", shorter::book_shorter::longest_word(&book_in));
 
+    println!("Minimum number of lines {}", shorter::book_shorter::minimum_lines_possible(&book_in));
+    
+
     /*
     let hist = shorter::book_shorter::compress(&book_in);
     for (i, x) in hist.iter().enumerate() {

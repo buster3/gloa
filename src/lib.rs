@@ -13,6 +13,14 @@ pub mod book_shorter {
             .unwrap_or(0)
     }
 
+    pub fn minimum_lines_possible(book_in: &str) -> f32 {
+        let required_characters : usize = book_in
+            .split_whitespace()
+            .map(|word| -> usize {word.chars().count() + 1})
+            .sum();
+        required_characters as f32 / TARGET as f32
+    }
+
     pub fn hist_word(book_in: &str) -> Vec<u32> {
         let mut vec: Vec<u32> = Vec::new();
         for x in book_in.split_whitespace() {
@@ -32,11 +40,11 @@ pub mod book_shorter {
         chars: u8,
     }
 
-    fn word_len(i : usize) -> isize {
+    fn word_len(i: usize) -> isize {
         i as isize + 2
     }
 
-    fn get_idx(i : isize) -> usize {
+    fn get_idx(i: isize) -> usize {
         assert!(i >= 2);
         i as usize - 2
     }
@@ -44,17 +52,16 @@ pub mod book_shorter {
     pub const MAX_COMBINATIONS: usize = 3;
 
     fn try_combination(combination: &Vec<usize>, sorted: &mut Vec<u32>, res: &mut isize) -> bool {
-        let mut unique : Vec<usize> = combination.clone();
+        let mut unique: Vec<usize> = combination.clone();
         unique.dedup();
-        let combination_possible = unique.iter().all(|&x| {
-            let cnt = combination.iter().fold(0, |total, &s| { 
-            if s == x {
-                total + 1
-            } else {
-                total
-            }});
-            sorted[x] >= cnt as u32
-        });
+        let combination_possible = unique
+            .iter()
+            .all(|&x| {
+                     let cnt = combination
+                         .iter()
+                         .fold(0, |total, &s| if s == x { total + 1 } else { total });
+                     sorted[x] >= cnt as u32
+                 });
 
         if combination_possible {
             // found a pair to fill the line
@@ -95,8 +102,6 @@ pub mod book_shorter {
                 }
 
                 //let border = word_len(i) * MAX_COMBINATIONS as isize;
-
-                // TODO greater equal?
                 if free > border {
                     // fill up
                     res[out_idx] += word_len(i);
