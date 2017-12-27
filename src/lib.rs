@@ -42,8 +42,8 @@ pub mod book_shorter {
 
     pub const MAX_COMBINATIONS: usize = 3;
 
-    fn try_combination(combination : [usize; MAX_COMBINATIONS], sorted: &mut Vec<u32>, res: &mut isize) -> bool {
-        let mut unique : Vec<usize> = combination.to_vec();
+    fn try_combination(combination: &Vec<usize>, sorted: &mut Vec<u32>, res: &mut isize) -> bool {
+        let mut unique : Vec<usize> = combination.clone();
         unique.dedup();
         let combination_possible = unique.iter().all(|&x| {
             let cnt = combination.iter().fold(0, |total, &s| { 
@@ -85,17 +85,16 @@ pub mod book_shorter {
                     res[out_idx] += word_len(i);
                     sorted[i] -= 1;
                 } else {
-                    // fill up with three more words,
-                    // using less words is not possible
+                    // try fill up with three more words
                     for k in 0..2 {
                         let first_idx = i - k;
                         let to_be_filled = free - word_len(first_idx);
-                        // TODO ceil idx
-                        let mut second_idx = get_idx(to_be_filled / 2);
+                        // ceil idx
+                        let mut second_idx = get_idx((to_be_filled + 1) / 2);
                         while second_idx <= i && to_be_filled - word_len(second_idx) >= 2 {
                             let thrid_idx = get_idx(to_be_filled - word_len(second_idx));
-                            let combination = [first_idx, second_idx, thrid_idx];
-                            if try_combination(combination, &mut sorted, &mut res[out_idx]) {
+                            let combination = vec![first_idx, second_idx, thrid_idx];
+                            if try_combination(&combination, &mut sorted, &mut res[out_idx]) {
                                 //println!("try i {}, free {}, combination {:?}, sorted {:?}", i, free, combination, sorted);
                                 break;
                             }
@@ -113,8 +112,9 @@ pub mod book_shorter {
                             println!("fill up");
                             res[out_idx] += word_len(i);
                             sorted[i] -= 1;
+                            //continue;
                         } else {
-                            //println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
+                            println!("fill up not possible");
                         }
                     }
 
