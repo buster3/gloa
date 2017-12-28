@@ -1,5 +1,4 @@
 pub mod book_shorter {
-    use std::cmp;
 
     pub fn number_words(book_in: &str) -> usize {
         book_in.split_whitespace().count()
@@ -51,6 +50,30 @@ pub mod book_shorter {
 
     pub const MAX_COMBINATIONS: usize = 3;
 
+
+    fn calculate_fill_border(sorted: &Vec<u32>, i: usize) -> isize {
+        let mut border = word_len(i);
+        let mut last_left = sorted[i] - 1;
+        let mut last_idx = i;
+
+        for _ in 1..MAX_COMBINATIONS {
+            let mut idx = last_idx;
+            if last_left == 0 {
+                while {
+                    idx -= 1;
+                    sorted[idx] == 0 && idx > 0
+                } {}
+                last_left = sorted[idx] - 1;
+            } else {
+                last_left -= 1;
+            }
+            last_idx = idx;
+            border += word_len(idx);
+        }
+        border
+    }
+
+
     fn try_combination(combination: &Vec<usize>, sorted: &mut Vec<u32>, res: &mut isize) -> bool {
         let mut unique: Vec<usize> = combination.clone();
         unique.dedup();
@@ -86,22 +109,9 @@ pub mod book_shorter {
 
                 let free = TARGET - res[out_idx];
 
-                let mut dummy = MAX_COMBINATIONS as isize;
-                let mut border = 0;
-                let mut i_t = i;
-                while dummy > 0 {
-                    let available = cmp::min(dummy, sorted[i_t] as isize);
-                    border += word_len(i_t) * available;
-                    dummy -= available;
-                    if i_t > 0 {
-                        i_t -= 1;
-                    } else {
-                        break;
-                    }
-                }
-
-                //let border = word_len(i) * MAX_COMBINATIONS as isize;
-                if free > border {
+                // calculate aprox border for speedup
+                let aprox_border = word_len(i) * MAX_COMBINATIONS as isize;
+                if free > aprox_border || free > calculate_fill_border(&sorted, i) {
                     // fill up
                     res[out_idx] += word_len(i);
                     sorted[i] -= 1;
@@ -110,7 +120,6 @@ pub mod book_shorter {
                     for k in 0..2 {
                         let first_idx = i - k;
                         let to_be_filled = free - word_len(first_idx);
-                        // ceil idx
                         let mut second_idx = first_idx;
                         loop {
                             let word_len_third = to_be_filled - word_len(second_idx);
@@ -131,10 +140,14 @@ pub mod book_shorter {
                             break;
                         }
                     }
+
+
                     if res[out_idx] != TARGET {
                         // soo bad... :(
                         println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
                     }
+
+                    //println!("sorted {:?}", sorted);
 
                     // next line
                     res.push(0);
