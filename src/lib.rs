@@ -141,7 +141,6 @@ pub mod book_shorter {
                     }
 
                     while current_fill_level != TARGET {
-                        println!("need whitespace");
                         // what a pitty
                         res.push(' ');
                         current_fill_level += 1;
