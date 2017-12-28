@@ -1,42 +1,23 @@
+pub mod book_info;
+
 pub mod book_shorter {
-
-    pub fn number_words(book_in: &str) -> usize {
-        book_in.split_whitespace().count()
-    }
-
-    pub fn longest_word(book_in: &str) -> usize {
-        book_in
-            .split_whitespace()
-            .map(|x| x.chars().count())
-            .max()
-            .unwrap_or(0)
-    }
-
-    pub fn minimum_lines_possible(book_in: &str) -> f32 {
-        let required_characters : usize = book_in
-            .split_whitespace()
-            .map(|word| -> usize {word.chars().count() + 1})
-            .sum();
-        required_characters as f32 / TARGET as f32
-    }
-
-    pub fn hist_word(book_in: &str) -> Vec<u32> {
-        let mut vec: Vec<u32> = Vec::new();
-        for x in book_in.split_whitespace() {
-            let cnt = x.chars().count();
-            if vec.len() < cnt {
-                vec.resize(cnt, 0)
-            }
-            vec[cnt - 1] = vec[cnt - 1] + 1;
-        }
-        vec
-    }
 
     pub const TARGET: isize = 81;
 
     struct Word<'a> {
-        word: &'a str,
-        chars: u8,
+        w: &'a str
+    }
+
+    fn load_data(book_in: &str) -> Vec<Vec<Word>> {
+        let mut vec: Vec<Vec<Word>> = vec![Vec::new()];
+        for x in book_in.split_whitespace() {
+            let cnt = x.chars().count();
+            while vec.len() < cnt {
+                vec.push(Vec::new())
+            }
+            vec[cnt - 1].push(Word{w: x});
+        }
+        vec
     }
 
     fn word_len(i: usize) -> isize {
@@ -51,9 +32,9 @@ pub mod book_shorter {
     pub const MAX_COMBINATIONS: usize = 3;
 
 
-    fn calculate_fill_border(sorted: &Vec<u32>, i: usize) -> isize {
+    fn calculate_fill_border(sorted: &Vec<Vec<Word>>, i: usize) -> isize {
         let mut border = word_len(i);
-        let mut last_left = sorted[i] - 1;
+        let mut last_left = sorted[i].len() - 1;
         let mut last_idx = i;
 
         for _ in 1..MAX_COMBINATIONS {
@@ -61,9 +42,12 @@ pub mod book_shorter {
             if last_left == 0 {
                 while {
                     idx -= 1;
-                    sorted[idx] == 0 && idx > 0
+                    sorted[idx].len() == 0 && idx > 0
                 } {}
-                last_left = sorted[idx] - 1;
+                if sorted[idx].len() == 0 {
+                    break;
+                }
+                last_left = sorted[idx].len() - 1;
             } else {
                 last_left -= 1;
             }
@@ -74,11 +58,11 @@ pub mod book_shorter {
     }
 
 
-    fn try_combination(combination: &[usize; MAX_COMBINATIONS], sorted: &mut Vec<u32>, res: &mut isize) -> bool {
-        if sorted[combination[0]] == 0 {
+    fn try_combination(combination: &[usize; MAX_COMBINATIONS], sorted: &mut Vec<Vec<Word>>, res: &mut String, current_fill_level : &mut isize) -> bool {
+        if sorted[combination[0]].len() == 0 {
             return false
         }
-        let mut last_left = sorted[combination[0]] - 1;
+        let mut last_left = sorted[combination[0]].len() - 1;
         let mut last_idx = combination[0];
 
         let combination_possible = combination[1..MAX_COMBINATIONS].iter().all(|&idx| -> bool {
@@ -89,10 +73,10 @@ pub mod book_shorter {
                     last_left -= 1;
                 }
             } else {
-                if sorted[idx] == 0 {
+                if sorted[idx].len() == 0 {
                     return false
                 } else {
-                    last_left = sorted[idx] - 1;
+                    last_left = sorted[idx].len() - 1;
                 }
             }
             last_idx = idx;
@@ -101,8 +85,9 @@ pub mod book_shorter {
 
         if combination_possible {
             // found a pair to fill the line
-            *res += combination.iter().map(|&x| {
-                sorted[x] -= 1;
+            *current_fill_level += combination.iter().map(|&x| {
+                res.push_str(sorted[x].pop().unwrap().w);
+                res.push(' ');
                 word_len(x)
             }).sum();
             true
@@ -111,25 +96,28 @@ pub mod book_shorter {
         }
     }
 
-    pub fn compress(book_in: &str) -> Vec<isize> {
-        let mut sorted = hist_word(book_in);
-        let mut res: Vec<isize> = Vec::new();
-        res.push(0);
-        let mut out_idx = 0 as usize;
+    pub fn compress(book_in: &str) -> String {
+        let mut sorted = load_data(book_in);
+        let mut res: String = String::new();
 
+        let mut current_fill_level = 0;
         for i in (0..sorted.len()).rev() {
-            while sorted[i] > 0 {
+            while sorted[i].len() > 0 {
 
-                let free = TARGET - res[out_idx];
+                let free = TARGET - current_fill_level;
 
                 // calculate aprox border for speedup
                 let aprox_border = word_len(i) * MAX_COMBINATIONS as isize;
-                if free > aprox_border || free > calculate_fill_border(&sorted, i) {
+                let exact_border = calculate_fill_border(&sorted, i);
+                //println!("free {} aprox_border {} exact_border {}", free, aprox_border, exact_border);
+                if free > aprox_border || free > exact_border {
                     // fill up
-                    res[out_idx] += word_len(i);
-                    sorted[i] -= 1;
+                    current_fill_level += word_len(i);
+                    res.push_str(sorted[i].pop().unwrap().w);
+                    res.push(' ');
+                    //println!("filled up {} current_fill_level {}", word_len(i), current_fill_level);
                 } else {
-                    // Try to fill up with three more words.
+                    // Try to fill up with exactly three more words.
                     for k in 0..2 {
                         let first_idx = i - k;
                         let mut second_idx = first_idx;
@@ -137,8 +125,8 @@ pub mod book_shorter {
                             let word_len_third = free - word_len(first_idx) - word_len(second_idx);
                             if word_len_third >= 2 {
                                 let combination = [first_idx, second_idx, get_idx(word_len_third)];
-                                if try_combination(&combination, &mut sorted, &mut res[out_idx]) {
-                                    //println!("try i {}, free {}, combination {:?}, sorted {:?}", i, free, combination, sorted);
+                                if try_combination(&combination, &mut sorted, & mut res, &mut current_fill_level) {
+                                    //println!("try i {}, free {}, combination {:?}", i, free, combination);
                                     break;
                                 }
                             }
@@ -147,44 +135,28 @@ pub mod book_shorter {
                             }
                             second_idx = second_idx - 1;
                         };
-                        if res[out_idx] == TARGET {
+                        if current_fill_level == TARGET {
                             break;
                         }
                     }
-                    // next line
-                    res.push(0);
-                    out_idx = out_idx + 1;
 
+                    while current_fill_level != TARGET {
+                        println!("need whitespace");
+                        // what a pitty
+                        res.push(' ');
+                        current_fill_level += 1;
+                    }
+
+                    // replace last whitespace with newline
+                    res.pop();
+                    res.push('\n');
+
+                    // next line
+                    current_fill_level = 0;
                 }
             }
         }
         res
-    }
-
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        static DUMMY_DATA: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-bbbbbbbbbbbbbbbbbbbbbbbbbbbb
-cccccccccccccccccccccccccccccccc
-eeeeeeeeeeeeeeeeeeeeeeee
-ddddddddddddddddddddddddddddd
-fffffffffffffffffff
-gggg
-h";
-
-        #[test]
-        fn cnt_words() {
-            assert_eq!(8, number_words(DUMMY_DATA));
-        }
-
-        #[test]
-        fn longest_word_test() {
-            assert_eq!(36, longest_word(DUMMY_DATA));
-        }
-
     }
 
 }
