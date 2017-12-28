@@ -74,24 +74,37 @@ pub mod book_shorter {
     }
 
 
-    fn try_combination(combination: &Vec<usize>, sorted: &mut Vec<u32>, res: &mut isize) -> bool {
-        let mut unique: Vec<usize> = combination.clone();
-        unique.dedup();
-        let combination_possible = unique
-            .iter()
-            .all(|&x| {
-                     let cnt = combination
-                         .iter()
-                         .fold(0, |total, &s| if s == x { total + 1 } else { total });
-                     sorted[x] >= cnt as u32
-                 });
+    fn try_combination(combination: &[usize; MAX_COMBINATIONS], sorted: &mut Vec<u32>, res: &mut isize) -> bool {
+        if sorted[combination[0]] == 0 {
+            return false
+        }
+        let mut last_left = sorted[combination[0]] - 1;
+        let mut last_idx = combination[0];
+
+        let combination_possible = combination[1..MAX_COMBINATIONS].iter().all(|&idx| -> bool {
+            if idx == last_idx {
+                if last_left == 0 {
+                    return false
+                } else {
+                    last_left -= 1;
+                }
+            } else {
+                if sorted[idx] == 0 {
+                    return false
+                } else {
+                    last_left = sorted[idx] - 1;
+                }
+            }
+            last_idx = idx;
+            true
+        });
 
         if combination_possible {
             // found a pair to fill the line
-            *res += combination.iter().map(|&x| word_len(x)).sum();
-            for &x in combination.iter() {
+            *res += combination.iter().map(|&x| {
                 sorted[x] -= 1;
-            }
+                word_len(x)
+            }).sum();
             true
         } else {
             false
@@ -116,16 +129,14 @@ pub mod book_shorter {
                     res[out_idx] += word_len(i);
                     sorted[i] -= 1;
                 } else {
-                    // try fill up with three more words
+                    // Try to fill up with three more words.
                     for k in 0..2 {
                         let first_idx = i - k;
-                        let to_be_filled = free - word_len(first_idx);
                         let mut second_idx = first_idx;
                         loop {
-                            let word_len_third = to_be_filled - word_len(second_idx);
+                            let word_len_third = free - word_len(first_idx) - word_len(second_idx);
                             if word_len_third >= 2 {
-                                let thrid_idx = get_idx(word_len_third);
-                                let combination = vec![first_idx, second_idx, thrid_idx];
+                                let combination = [first_idx, second_idx, get_idx(word_len_third)];
                                 if try_combination(&combination, &mut sorted, &mut res[out_idx]) {
                                     //println!("try i {}, free {}, combination {:?}, sorted {:?}", i, free, combination, sorted);
                                     break;
@@ -140,15 +151,6 @@ pub mod book_shorter {
                             break;
                         }
                     }
-
-
-                    if res[out_idx] != TARGET {
-                        // soo bad... :(
-                        println!("miss i {}, free {}, sorted {:?}", i, free, sorted);
-                    }
-
-                    //println!("sorted {:?}", sorted);
-
                     // next line
                     res.push(0);
                     out_idx = out_idx + 1;
