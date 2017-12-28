@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
-extern crate shorter;
+extern crate gloa;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -19,7 +19,7 @@ fn main() {
     //println!("Longest word in poem {}", shorter::book_info::longest_word(&book_in));
     //println!("Minimum number of lines {}", shorter::book_info::minimum_lines_possible(&book_in));
 
-    let result = shorter::book_shorter::compress(&book_in);
+    let result = gloa::book_shorter::compress(&book_in);
     println!("Lines in result: {}", result.chars().count() as f32 / 81.);
 
     let mut out = File::create("out.txt").expect("Error creating output file");

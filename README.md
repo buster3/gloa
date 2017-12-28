@@ -9,8 +9,8 @@ The programm is written in RUST. Install the RUST toolchain to build the program
 https://www.rust-lang.org/en-US/install.html
 
 ## Build and run
-```shell
-./cargo run --release  <path_to_alastalon_salissa.txt>
+```bash
+cargo run --release  <path_to_alastalon_salissa.txt>
 ```
 The reduced version of the book is written to `out.txt`.
 
