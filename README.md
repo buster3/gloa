@@ -5,7 +5,7 @@ A book shorter by Thomas Maierbacher <maierbacher@gmail.com>
 https://wunder.dog/the-shortest-edition/
 
 ## Install dependencies
-The programm is written in RUST. Install the RUST toolchain to build the programm.
+The program is written in RUST. Install the RUST toolchain to build the program.
 https://www.rust-lang.org/en-US/install.html
 
 ## Build and run
