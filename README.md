@@ -20,3 +20,6 @@ All words found:    [✓]
 Lines max 80 chars: [✓]
 21162 lines
 ```
+
+## Version2
+Only 46 characters in line 21162. This should be space minimal solution.
